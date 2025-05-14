@@ -114,22 +114,27 @@ const SrtUpload: React.FC<SrtUploadProps> = ({ onSrtParsed }) => {
 
   return (
     <motion.div
-      {...getRootProps()}
-      className={`my-8 p-10 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors 
-        ${isDragActive ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:border-blue-500'}`}
+      className={`my-8 text-center transition-colors 
+        ${isDragActive ? 'border-blue-600' : 'border-gray-300 hover:border-blue-500'}`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <input {...getInputProps()} />
-      {isDragActive ? (
-        <p className="text-blue-700 font-semibold">Drop the .srt file here ...</p>
-      ) : fileName ? (
-        <p className="text-green-700 font-semibold">File: {fileName} (Click to select another)</p>
-      ) : (
-        <p className="text-gray-500">Drag & drop your .srt file here, or click to select file.</p>
-      )}
-      {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+      <div
+        {...getRootProps()} 
+        className={`p-10 border-2 border-dashed rounded-lg cursor-pointer 
+          ${isDragActive ? 'bg-blue-50' : ''}`}
+      >
+        <input {...getInputProps()} />
+        {isDragActive ? (
+          <p className="text-blue-700 font-semibold">Drop the .srt file here ...</p>
+        ) : fileName ? (
+          <p className="text-green-700 font-semibold">File: {fileName} (Click to select another)</p>
+        ) : (
+          <p className="text-gray-500">Drag & drop your .srt file here, or click to select file.</p>
+        )}
+        {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+      </div>
     </motion.div>
   );
 };

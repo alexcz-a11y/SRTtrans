@@ -99,7 +99,6 @@ function App() {
 
     let entranceAnim: gsap.core.Tween | null = null;
     let settingsScrollAnim: gsap.core.Tween | null = null;
-    let testBtnHoverTl: gsap.core.Timeline | null = null;
     let playAnim: (() => void) | null = null;
     let reverseAnim: (() => void) | null = null;
 
@@ -558,8 +557,7 @@ function App() {
             console.log(`Entry ${entryToProcess.id} translated successfully on attempt ${attempt}.`);
             return updatedEntry; // Successful translation
           }
-        }
-      } catch (error: any) {
+        } catch (error: any) {
         console.error(`Error translating entry ${entryToProcess.id} on attempt ${attempt}:`, error);
         let apiError: ApiError;
         if (error.name === 'AbortError') {
@@ -578,8 +576,8 @@ function App() {
         } else {
           break; // Exit loop
         }
-      }
-    } // End of retry loop
+      } // End of retry loop
+    }
 
     // If loop finished (either by break or max attempts) and there's an error, it's final.
     // If signal was aborted, that error would already be set.
