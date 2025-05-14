@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger'; // Import ScrollTrigger
 // import { animate as animeAnimate, createScope as animeCreateScope } from 'animejs'; // Temporarily removing anime.js attempt
+import { SpeedInsights } from "@vercel/speed-insights/react"; // Import SpeedInsights
 import './App.css';
 import SrtUpload from './SrtUpload'; // Import the SrtUpload component
 
@@ -1019,6 +1020,9 @@ const App: React.FC = () => {
       <footer className="w-full py-6 text-center text-[#8785a2] text-sm">
         <p>&copy; 2025 SRT AI Translator. Inspired by aitls.emotion-agency.com</p>
       </footer>
+      
+      {/* Add SpeedInsights component */}
+      <SpeedInsights />
     </div>
   );
 };
