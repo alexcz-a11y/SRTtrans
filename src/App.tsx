@@ -4,8 +4,10 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger'; // Import ScrollTrigger
 // import { animate as animeAnimate, createScope as animeCreateScope } from 'animejs'; // Temporarily removing anime.js attempt
 import { SpeedInsights } from "@vercel/speed-insights/react"; // Import SpeedInsights
+import { Analytics } from "@vercel/analytics/react"; // Import Analytics
 import './App.css';
 import SrtUpload from './SrtUpload'; // Import the SrtUpload component
+import { isDemoMode, demoApiSettings, demoTranslate } from './config/demo-mode';
 
 // Define the ApiError interface
 interface ApiError {
@@ -327,6 +329,17 @@ const App: React.FC = () => {
     }
   }, [srtEntries]); // Re-run when srtEntries changes
 
+  // 在demo模式下使用演示API设置
+  useEffect(() => {
+    if (isDemoMode) {
+      console.log('Demo mode: Using demo API settings');
+      setApiSettings(demoApiSettings);
+      // 在demo模式下设置默认语言
+      setSourceLanguage('en');
+      setTargetLanguage('zh-CN');
+    }
+  }, []);
+
   const toggleSettings = () => {
     const newShowSettings = !showSettings;
     setShowSettings(newShowSettings);
@@ -398,6 +411,47 @@ const App: React.FC = () => {
     let accumulatedTranslation = '';
     let lastError: ApiError | undefined = undefined;
 
+    if (isDemoMode) {
+      // 在演示模式下使用模拟翻译
+      console.log(`Demo mode: Simulating translation for entry ${entryToProcess.id}`);
+      
+      // 更新UI显示翻译中状态
+      setTranslatedSrtEntries(prevEntries => 
+        prevEntries.map(pe => 
+          pe.id === entryToProcess.id 
+          ? { ...pe, translatedText: '翻译中...', error: undefined } 
+          : pe
+        )
+      );
+      
+      // 模拟翻译延迟
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (signal.aborted) {
+        updatedEntry.error = { type: 'UnknownError', message: 'Translation process aborted in demo mode.' };
+        return updatedEntry;
+      }
+      
+      try {
+        // 使用模拟翻译函数
+        const translation = await demoTranslate(
+          entryToProcess.text, 
+          sourceLangSnapshot, 
+          targetLangSnapshot
+        );
+        
+        updatedEntry.translatedText = translation;
+        return updatedEntry;
+      } catch (error: any) {
+        console.error(`Demo mode: Error in simulated translation for entry ${entryToProcess.id}:`, error);
+        updatedEntry.error = { 
+          type: 'UnknownError', 
+          message: 'Error in demo translation simulation.' 
+        };
+        return updatedEntry;
+      }
+    }
+    
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       if (signal.aborted) {
         updatedEntry.error = lastError || { type: 'UnknownError', message: 'Translation process aborted before/during retry attempt.' };
@@ -604,10 +658,16 @@ const App: React.FC = () => {
   };
 
   const startTranslation = async () => {
-    if (!srtEntries.length || !apiSettings.apiKey || !apiSettings.baseUrl) {
-      alert('Please upload an SRT file and provide API Key and Base URL.');
+    if (!srtEntries.length) {
+      alert('Please upload an SRT file.');
       return;
     }
+    
+    if (!isDemoMode && (!apiSettings.apiKey || !apiSettings.baseUrl)) {
+      alert('Please provide API Key and Base URL.');
+      return;
+    }
+    
     setIsTranslating(true);
     const initialProcessingEntries: SrtEntry[] = srtEntries.map(entry => ({ ...entry, translatedText: '', error: undefined }));
     setTranslatedSrtEntries([...initialProcessingEntries]);
@@ -623,9 +683,9 @@ const App: React.FC = () => {
     const currentContextualTranslationEnabled = contextualTranslationEnabled;
     const currentPrecedingContextLines = precedingContextLines;
     const currentSucceedingContextLines = succeedingContextLines;
-    const allEntriesSnapshot = [...srtEntries]; // Snapshot of all original entries
+    const allEntriesSnapshot = [...srtEntries];
 
-    for (const entry of initialProcessingEntries) { // Iterate over the prepared list
+    for (const entry of initialProcessingEntries) {
       if (controller.signal.aborted) {
         console.log('Translation aborted by user.');
         break;
@@ -1019,10 +1079,21 @@ const App: React.FC = () => {
 
       <footer className="w-full py-6 text-center text-[#8785a2] text-sm">
         <p>&copy; 2025 SRT AI Translator. Inspired by aitls.emotion-agency.com</p>
+        {isDemoMode && (
+          <p className="mt-2 text-xs">演示版 - 所有功能仅作界面展示</p>
+        )}
       </footer>
       
-      {/* Add SpeedInsights component */}
+      {/* Add SpeedInsights and Analytics components */}
       <SpeedInsights />
+      <Analytics />
+
+      {/* 如果在demo模式下，添加顶部演示标记 */}
+      {isDemoMode && (
+        <div className="fixed top-0 left-0 w-full bg-yellow-500 text-black text-center py-1 text-sm z-50">
+          ⚠️ 演示模式 - 仅作展示用途，翻译功能不会发送实际的API请求
+        </div>
+      )}
     </div>
   );
 };

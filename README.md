@@ -4,6 +4,12 @@
 
 本应用是一个基于网页的 SRT 字幕文件 AI 翻译工具，旨在提供高效、准确且用户友好的字幕翻译体验。🌐
 
+## 🌐 在线演示 (Online Demo)
+
+您可以访问 [https://sr-ttrans.vercel.app/](https://sr-ttrans.vercel.app/) 查看本应用的在线演示版本。
+
+**注意：** 演示版本运行在"Demo模式"下，使用预设的示例数据展示界面功能，而不会进行真实的API调用。
+
 ## ✨ 功能概览 (Features)
 
 *   📄 **SRT 文件处理**:
@@ -40,6 +46,18 @@
 ## 🚀 自部署步骤 (Self-Hosting Guide)
 
 本项目基于 Vite + React + TypeScript 构建。请遵循以下步骤在您自己的环境中部署：
+
+### 一键部署到Vercel (One-Click Deploy to Vercel)
+
+点击下方按钮，一键将本项目部署到您自己的Vercel账户：
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/alexcz-a11y/SRTtrans)
+
+**控制演示模式：** 默认情况下，部署后的应用不会启用演示模式。如果您希望开启或关闭演示模式，请在Vercel项目设置中配置环境变量：
+1. 进入Vercel项目的 "Settings" -> "Environment Variables"
+2. 找到名为 `DEMO_MODE` 的变量（如果不存在，请创建）
+3. 设置为 `true` 开启演示模式，或设置为 `false` 关闭演示模式
+4. 保存设置并重新部署项目
 
 ### 🛠️ 2.1. 环境准备 (Prerequisites)
 
@@ -101,3 +119,14 @@
 
 ---
 希望这份文档对您有所帮助！如果您喜欢这个项目，请给它一个 ⭐ Star！
+
+## 💡 开发者说明 (Developer Notes)
+
+### Demo模式
+项目包含一个演示模式（Demo Mode），用于在不需要真实API密钥的情况下展示应用功能。
+
+* 此模式通过环境变量 `DEMO_MODE` 或 `VITE_DEMO_MODE` 设置为 `'true'` 来启用
+* 在演示模式下，应用会使用预设的示例数据和模拟的翻译功能
+* 如果您进行自己的部署且想使用真实功能，请确保：
+  * 不要在环境变量中设置 `DEMO_MODE=true` 或 `VITE_DEMO_MODE=true`
+  * 如果使用Vercel部署，可以在项目设置中移除 `DEMO_MODE` 环境变量

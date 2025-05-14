@@ -1,12 +1,14 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
+import { isDemoMode, demoSrtEntries } from './config/demo-mode';
 
 interface SrtEntry {
   id: number;
   startTime: string;
   endTime: string;
   text: string;
+  translatedText?: string;
 }
 
 interface SrtUploadProps {
@@ -16,6 +18,17 @@ interface SrtUploadProps {
 const SrtUpload: React.FC<SrtUploadProps> = ({ onSrtParsed }) => {
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [demoLoaded, setDemoLoaded] = useState<boolean>(false);
+
+  // 在demo模式下自动加载示例数据
+  useEffect(() => {
+    if (isDemoMode && !demoLoaded) {
+      console.log('Demo mode active: Loading sample SRT entries');
+      setFileName('demo-subtitle-sample.srt');
+      onSrtParsed(demoSrtEntries);
+      setDemoLoaded(true);
+    }
+  }, [isDemoMode, demoLoaded, onSrtParsed]);
 
   const parseSrt = (srtContent: string): SrtEntry[] => {
     const entries: SrtEntry[] = [];
@@ -69,6 +82,12 @@ const SrtUpload: React.FC<SrtUploadProps> = ({ onSrtParsed }) => {
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    // 如果在demo模式下，不处理实际文件上传
+    if (isDemoMode) {
+      setError('在演示模式下，上传功能已被禁用。这是一个展示界面的demo网站。');
+      return;
+    }
+
     setError(null);
     setFileName(null);
     if (acceptedFiles.length > 0) {
@@ -110,6 +129,8 @@ const SrtUpload: React.FC<SrtUploadProps> = ({ onSrtParsed }) => {
       'text/srt': ['.srt'],
     },
     multiple: false,
+    // 在demo模式下禁用拖放功能
+    disabled: isDemoMode && demoLoaded,
   });
 
   return (
@@ -123,17 +144,31 @@ const SrtUpload: React.FC<SrtUploadProps> = ({ onSrtParsed }) => {
       <div
         {...getRootProps()} 
         className={`p-10 border-2 border-dashed rounded-lg cursor-pointer 
-          ${isDragActive ? 'bg-blue-50' : ''}`}
+          ${isDragActive ? 'bg-blue-50' : ''}
+          ${isDemoMode && demoLoaded ? 'opacity-60' : ''}`}
       >
         <input {...getInputProps()} />
         {isDragActive ? (
           <p className="text-blue-700 font-semibold">Drop the .srt file here ...</p>
         ) : fileName ? (
-          <p className="text-green-700 font-semibold">File: {fileName} (Click to select another)</p>
+          <p className="text-green-700 font-semibold">
+            File: {fileName} 
+            {isDemoMode ? ' (Demo Mode)' : ' (Click to select another)'}
+          </p>
         ) : (
-          <p className="text-gray-500">Drag & drop your .srt file here, or click to select file.</p>
+          <p className="text-gray-500">
+            {isDemoMode 
+              ? '这是演示模式 - 已自动加载示例字幕文件' 
+              : 'Drag & drop your .srt file here, or click to select file.'}
+          </p>
         )}
         {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
+        {isDemoMode && demoLoaded && (
+          <div className="mt-4 bg-yellow-50 p-2 rounded-md text-sm text-yellow-700">
+            <p>⚠️ 演示模式已激活 - 这是一个展示用网站</p>
+            <p>真实的翻译功能已被模拟效果替代</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );
