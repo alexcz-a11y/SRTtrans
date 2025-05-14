@@ -1,6 +1,6 @@
 # SRT AI 翻译器 SRT AI Translator 字幕文件AI翻译工具 🚀
 
-![SRT AI Translator Banner](https://your-image-url-here.com/banner.png) <!-- 建议您创建一个项目横幅图片并替换此链接 -->
+![SRT AI Translator Banner](https://storage.googleapis.com/mc-5e7e4a8fd037d4da6df4f86a6ce2d393/uploads/1714018826633_globe-gradient.png)
 
 本应用是一个基于网页的 SRT 字幕文件 AI 翻译工具，旨在提供高效、准确且用户友好的字幕翻译体验。🌐
 
