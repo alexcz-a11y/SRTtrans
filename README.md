@@ -96,7 +96,7 @@ export default tseslint.config({
 
 *   **Node.js**: 请确保您的系统中已安装 Node.js (建议 [LTS 版本](https://nodejs.org/))。npm 通常会随 Node.js 一同安装。
 *   **代码获取**:
-    *   通过 Git 克隆: `git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git` (请替换为您的仓库地址)
+    *   通过 Git 克隆: `git clone https://github.com/alexcz-a11y/SRTtrans.git` (请将 YOUR_USERNAME/YOUR_REPOSITORY_NAME 替换为您的仓库地址)
     *   或下载 ZIP 包解压。
 
 ### 📦 2.2. 安装依赖 (Installation)
