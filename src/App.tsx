@@ -50,7 +50,7 @@ const RETRY_DELAY_MS = 3000;
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-function App() {
+const App: React.FC = () => {
   const [srtEntries, setSrtEntries] = useState<SrtEntry[]>([]);
   const [translatedSrtEntries, setTranslatedSrtEntries] = useState<SrtEntry[]>([]);
   const [apiSettings, setApiSettings] = useState<ApiSettings>({
@@ -394,7 +394,7 @@ function App() {
     allOriginalEntriesSnapshot: SrtEntry[] // To get context from
   ): Promise<SrtEntry> => {
     let updatedEntry: SrtEntry = { ...entryToProcess, translatedText: '', error: undefined };
-      let accumulatedTranslation = '';
+    let accumulatedTranslation = '';
     let lastError: ApiError | undefined = undefined;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -494,72 +494,83 @@ function App() {
             console.log(`Entry ${entryToProcess.id} failed with non-retryable error or max retries reached.`);
             break; // Exit loop, error is final
           }
-        } else {
+        } 
+        
+        // 这里处理正常流程的代码
         const reader = response.body?.getReader();
         if (!reader) {
             lastError = { type: 'UnknownError', message: 'Failed to get response reader' };
             updatedEntry.error = lastError;
             // This is likely not retryable by default unless we make it so
-            if (autoRetryEnabledSnapshot && lastError.retryable && attempt < MAX_RETRIES) continue;
+            if (autoRetryEnabledSnapshot && lastError.retryable && attempt < MAX_RETRIES) {
+              continue;
+            }
             break; 
         }
+        
         const decoder = new TextDecoder();
-          let streamDone = false;
+        let streamDone = false;
+        
+        while (!streamDone) {
+          if (signal.aborted) {
+            if (!updatedEntry.error && !accumulatedTranslation) {
+                updatedEntry.error = { type: 'UnknownError', message: 'Translation aborted by user during streaming.' };
+            }
+            streamDone = true; 
+            break;
+          }
           
-          while (!streamDone) {
-            if (signal.aborted) {
-              if (!updatedEntry.error && !accumulatedTranslation) {
-                   updatedEntry.error = { type: 'UnknownError', message: 'Translation aborted by user during streaming.' };
-              }
-              streamDone = true; 
-              break;
-            }
           const { done, value } = await reader.read();
-            if (done) {
-              streamDone = true;
-              break;
-            }
+          if (done) {
+            streamDone = true;
+            break;
+          }
+          
           const chunk = decoder.decode(value);
           const lines = chunk.split('\n').filter(line => line.trim() !== '');
+          
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               const data = line.substring(6);
-                if (data === '[DONE]') {
-                  streamDone = true; 
-                  break; 
-                }
+              if (data === '[DONE]') {
+                streamDone = true; 
+                break; 
+              }
+              
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.choices && parsed.choices[0].delta && parsed.choices[0].delta.content) {
                   accumulatedTranslation += parsed.choices[0].delta.content;
-                    updatedEntry.translatedText = accumulatedTranslation;
-                     // Live update UI with streamed content
-                    setTranslatedSrtEntries(prevEntries => 
-                      prevEntries.map(pe => 
-                        pe.id === entryToProcess.id 
-                        ? { ...pe, translatedText: accumulatedTranslation, error: undefined } 
-                        : pe
-                      )
-                    );
+                  updatedEntry.translatedText = accumulatedTranslation;
+                  // Live update UI with streamed content
+                  setTranslatedSrtEntries(prevEntries => 
+                    prevEntries.map(pe => 
+                      pe.id === entryToProcess.id 
+                      ? { ...pe, translatedText: accumulatedTranslation, error: undefined } 
+                      : pe
+                    )
+                  );
                 }
-                } catch (e: any) {
+              } catch (e: any) {
                 console.error('Error parsing stream data:', e, 'Raw data:', data);
-                  lastError = { type: 'StreamParseError', message: `Error parsing stream: ${e.message}` };
-                  updatedEntry.error = lastError;
-                  streamDone = true; 
-                  break;
-                }
+                lastError = { type: 'StreamParseError', message: `Error parsing stream: ${e.message}` };
+                updatedEntry.error = lastError;
+                streamDone = true; 
+                break;
               }
             }
           }
-          // If loop finished due to streamDone and not an error within streaming
-          if (!updatedEntry.error) {
-            console.log(`Entry ${entryToProcess.id} translated successfully on attempt ${attempt}.`);
-            return updatedEntry; // Successful translation
-          }
-        } catch (error: any) {
+        }
+        
+        // If loop finished due to streamDone and not an error within streaming
+        if (!updatedEntry.error) {
+          console.log(`Entry ${entryToProcess.id} translated successfully on attempt ${attempt}.`);
+          return updatedEntry; // Successful translation
+        }
+      } catch (error: any) {
         console.error(`Error translating entry ${entryToProcess.id} on attempt ${attempt}:`, error);
         let apiError: ApiError;
+        
         if (error.name === 'AbortError') {
           apiError = { type: 'UnknownError', message: 'Translation process aborted.' };
         } else if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('NetworkError'))) { 
@@ -567,6 +578,7 @@ function App() {
         } else {
           apiError = { type: 'UnknownError', message: error.message || 'An unknown error occurred during translation.' };
         }
+        
         lastError = apiError;
         updatedEntry.error = lastError;
 
@@ -576,8 +588,8 @@ function App() {
         } else {
           break; // Exit loop
         }
-      } // End of retry loop
-    }
+      }
+    } // End of retry loop
 
     // If loop finished (either by break or max attempts) and there's an error, it's final.
     // If signal was aborted, that error would already be set.
@@ -585,6 +597,7 @@ function App() {
     if (!updatedEntry.error && lastError) { // Ensure error is set if loop exhausted retries
         updatedEntry.error = lastError;
     }
+    
     console.log(`Entry ${entryToProcess.id} finished processing. Final error:`, updatedEntry.error);
     return updatedEntry;
   };
@@ -1008,7 +1021,7 @@ function App() {
       </footer>
     </div>
   );
-}
+};
 
 export default App;
 
